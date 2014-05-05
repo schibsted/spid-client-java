@@ -11,7 +11,7 @@ import static org.junit.Assert.assertTrue;
 public class SpidApiResponseTest {
 
     @Test
-    public void getData() {
+    public void getData() throws Exception {
         SpidApiResponse response = new SpidApiResponse(200, null, "{\"name\":\"SPP Container\",\"version\":\"0.2\",\"api\":2,\"object\":\"Payment\",\"type\":\"element\",\"code\":200,\"data\":\"FOO\"}");
 
         assertEquals("FOO", response.getRawData());
@@ -21,7 +21,7 @@ public class SpidApiResponseTest {
     }
 
     @Test
-    public void readSignedData() {
+    public void readSignedData() throws Exception {
         String rawBody = "{\"name\":\"SPP Container\",\"version\":\"0.2\",\"api\":2,\"data\":\"eyJwYXltZW50\",\"algorithm\":\"HMAC-SHA256\",\"sig\":\"jnx1U1lGAWJ7Biskboc6PNBtJsL3bpq_prfo9EDXd0Q\"}";
         SpidApiResponse response = new SpidApiResponse(200, null, rawBody);
 
@@ -52,4 +52,14 @@ public class SpidApiResponseTest {
         JSONObject object = json.getJSONObject(1);
         assertEquals(object.getString("name"), "FOOBAR");
     }
+
+    @Test
+    public void testGetRawData() throws Exception {
+        SpidApiResponse response = new SpidApiResponse(200, null, "{\"name\":\"SPP Container\",\"version\":\"0.2\",\"api\":2,\"object\":\"Payment\",\"type\":\"element\",\"code\":200,\"data\":[{\"name\":\"FOO\"},{\"name\":\"FOOBAR\"}]}");
+        assertEquals("[{\"name\":\"FOO\"},{\"name\":\"FOOBAR\"}]", response.getRawData());
+
+        response = new SpidApiResponse(200, null, "{\"name\":\"SPP Container\",\"version\":\"0.2\",\"api\":2,\"object\":\"Payment\",\"type\":\"element\",\"code\":200,\"data\":{\"name\":\"FOO\"}}");
+        assertEquals("{\"name\":\"FOO\"}", response.getRawData());
+    }
+
 }

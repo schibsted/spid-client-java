@@ -60,6 +60,19 @@ public class SpidApiResponse {
     }
 
     /**
+     * Check if the data received is an array
+     *
+     * @return true if array, false if not
+     */
+    public boolean isObject() {
+        if ( data == null) {
+            data = getJsonResponse().get("data");
+        }
+
+        return data instanceof JSONObject;
+    }
+
+    /**
      * Use this to get a JSONArray representation of the response.
      * Will throw exception if data is not an array.
      *
@@ -96,12 +109,12 @@ public class SpidApiResponse {
     }
 
     /**
-     * Get data as string
+     * Get response data field as string
      *
      * @return data
      */
-    public String getRawData() {
-        return getJsonValue("data");
+    public String getRawData() throws SpidApiException {
+        return isArray() ? getJsonArray().toString() : isObject() ? getJsonData().toString() : getJsonValue("data");
     }
 
     /**
