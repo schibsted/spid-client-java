@@ -260,6 +260,40 @@ public class SpidApiClient {
     }
 
     /**
+     * Retrieves a user token by authenticating with the user's username and password
+     *
+     * @param username The user's username
+     * @param password The user's password
+     * @return an access token with the type SpidOAuthTokenType.USER
+     * @throws SpidOAuthException
+     */
+    public SpidOAuthToken getUserToken(String username, String password) throws SpidOAuthException {
+        OAuthJSONAccessTokenResponse oAuthResponse;
+
+        try {
+            OAuthClientRequest request = OAuthClientRequest
+                    .tokenLocation(spidTokenUrl)
+                    .setClientId(clientId)
+                    .setClientSecret(clientSecret)
+                    .setGrantType(GrantType.PASSWORD)
+                    .setRedirectURI(redirectUrl)
+                    .setUsername(username)
+                    .setPassword(password)
+                    .buildBodyMessage();
+
+            OAuthClient oAuthClient = new OAuthClient(connectionClientFactory.getClient());
+            oAuthResponse = oAuthClient.accessToken(request);
+
+        } catch (OAuthSystemException e) {
+            throw new SpidOAuthException(e);
+        } catch (OAuthProblemException e) {
+            throw new SpidOAuthException(e);
+        }
+
+        return new SpidOAuthToken(oAuthResponse.getOAuthToken(), SpidOAuthTokenType.USER);
+    }
+
+    /**
      * Wrapper for validating/refreshing/refetching an oauth-token automatically if enabled. When the token is validated
      * its access token part is returned.
      *
