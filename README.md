@@ -10,7 +10,7 @@ To use the spid-client-java in your projects include it in your pom.xml.
 <dependency>
     <groupId>no.spid</groupId>
     <artifactId>no.spid.api.client</artifactId>
-    <version>1.0</version>
+    <version>1.2</version>
 </dependency>
 ```
 
