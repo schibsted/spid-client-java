@@ -130,7 +130,7 @@ public class SpidApiResponse {
         return jsonResponse;
     }
 
-    public String getResponseSignture() {
+    public String getResponseSignature() {
         return getJsonValue("sig");
     }
 
@@ -158,6 +158,6 @@ public class SpidApiResponse {
     }
 
     public boolean isEncrypted() {
-        return getResponseSignture() != null && getResponseAlgorithm() != null;
+        return getResponseSignature() != null && getResponseAlgorithm() != null;
     }
 }
