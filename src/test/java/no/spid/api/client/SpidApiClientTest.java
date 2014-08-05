@@ -14,6 +14,8 @@ import org.apache.oltu.oauth2.client.response.OAuthResourceResponse;
 import org.apache.oltu.oauth2.common.token.BasicOAuthToken;
 import org.junit.Test;
 
+import java.net.URL;
+
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -26,14 +28,29 @@ public class SpidApiClientTest {
 
     @Test
     public void getAuthorizationURL() throws Exception {
-
-        assertEquals("fooBaseUrl/oauth/authorize?response_type=code&redirect_uri=https%3A%2F%2Ffooserver%2Flogin&client_id=fooClient", getFooClient().getAuthorizationURL("https://fooserver/login"));
+        assertEqualURLs("https://fooBaseUrl/oauth/authorize?response_type=code&redirect_uri=https%3A%2F%2Ffooserver%2Flogin&client_id=fooClient", getFooClient().getAuthorizationURL("https://fooserver/login"));
     }
 
     @Test
     public void getLogoutUrl() throws Exception {
+        assertEqualURLs("https://fooBaseUrl/logout?redirect_uri=https%3A%2F%2Ffooserver%2Flogout&oauth_token=accesstoken", getFooClient().getLogoutURL(getMockToken(), "https://fooserver/logout"));
+    }
 
-        assertEquals("fooBaseUrl/logout?redirect_uri=https%3A%2F%2Ffooserver%2Flogout&oauth_token=accesstoken", getFooClient().getLogoutURL(getMockToken(), "https://fooserver/logout"));
+    @Test
+    public void deleteRequest() throws Exception {
+        SpidUrlConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
+                "{\"name\":\"SPP Container\",\"version\":\"0.2\",\"api\":2,\"code\":200,\"data\":\"VGhpcyBkYXRhIHdhcyBlbmNyeXB0ZWQh\",\"algorithm\":\"HMAC-SHA256\",\"sig\":\"9epFW_MQKbRUPSmKLY_tShahRxtddL9JY-vGVEOf_IA\"}",
+                "application/json",
+                200,
+                OAuthResourceResponse.class);
+
+        SpidApiClient spidClient = new SpidApiClient.ClientBuilder("ID", "SECRET", "SIGNSECRET", "https://redirect.uri", "https://spiddomain.no")
+                .connectionClientFactory(connectionClientFactory)
+                .build();
+
+        SpidApiResponse response = spidClient.DELETE(getMockToken(), "/paylink/1", null);
+        assertEquals(200, response.getResponseCode());
+
     }
 
     @Test
@@ -70,7 +87,6 @@ public class SpidApiClientTest {
 
         SpidApiResponse response = spidClient.GET(getMockToken(), "/user/1", null);
         assertEquals("This data was encrypted!", response.getRawData());
-
     }
 
     @Test(expected = SpidApiException.class)
@@ -136,7 +152,7 @@ public class SpidApiClientTest {
     /** END OF TESTS **/
 
     private SpidApiClient getFooClient() {
-        return new SpidApiClient.ClientBuilder("fooClient", "fooSecret", "fooSignatureSecret", "https://fooserver", "fooBaseUrl").build();
+        return new SpidApiClient.ClientBuilder("fooClient", "fooSecret", "fooSignatureSecret", "https://fooserver", "https://fooBaseUrl").build();
     }
 
     /**
@@ -215,5 +231,42 @@ public class SpidApiClientTest {
         when(connectionClientFactory.getClient()).thenReturn(httpClient);
 
         return connectionClientFactory;
+    }
+
+    /**
+     * Utility method to compare two urls. Ignoring order on parameters.
+     *
+     * @param urlExpected expected url
+     * @param urlActual actual url
+     * @throws Exception any error
+     */
+    private void assertEqualURLs(String urlExpected, String urlActual) throws Exception {
+        URL uExpected = new URL(urlExpected);
+        URL uActual = new URL(urlActual);
+
+        // Check path
+        assertEquals(uExpected.getProtocol(), uActual.getProtocol());
+        assertEquals(uExpected.getHost(), uActual.getHost());
+        assertEquals(uExpected.getPort(), uActual.getPort());
+        assertEquals(uExpected.getPath(), uActual.getPath());
+
+        // Check parameters, ignore order
+        String[] actualParameters = uActual.getQuery().split("&");
+        String[] expectedParameters = uExpected.getQuery().split("&");
+
+        assertEquals(actualParameters.length, expectedParameters.length);
+
+        for (String actualParameter:actualParameters) {
+            boolean match = false;
+            for (String expectedParameter:expectedParameters) {
+                if (actualParameter.equals(expectedParameter)) {
+                    match = true;
+                    break;
+                }
+            }
+            if (!match) {
+                fail("URLs are not equal!");
+            }
+        }
     }
 }

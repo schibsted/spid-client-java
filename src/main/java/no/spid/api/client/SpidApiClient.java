@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * The SpidApiClient can be used to login users and get their user tokens, get server tokens. When a token is aquired
  * the client can be used to consume the services of the SPiD API.
- * <p/>
+ *
  * http://techdocs.spid.no
  */
 public class SpidApiClient {
@@ -69,7 +69,7 @@ public class SpidApiClient {
      *
      * @param redirectUrl where to redirect the user after successful login
      * @return the consntructed url
-     * @throws SpidOAuthException
+     * @throws SpidOAuthException If an OAuth related error occurs
      */
     public String getAuthorizationURL(String redirectUrl) throws SpidOAuthException {
         OAuthClientRequest request;
@@ -94,7 +94,7 @@ public class SpidApiClient {
      * @param token       access token for the user you wish to logout
      * @param redirectUrl where to redirect the user after successful logout
      * @return the constructed url
-     * @throws SpidOAuthException
+     * @throws SpidOAuthException If an OAuth related error occurs
      */
     public String getLogoutURL(SpidOAuthToken token, String redirectUrl) throws SpidOAuthException {
         OAuthClientRequest request;
@@ -141,9 +141,9 @@ public class SpidApiClient {
      * @param token      the token to use for the request
      * @param endpoint   what API endpoint to call
      * @param properties properties to supply to the API
-     * @return SpidApiResponse
-     * @throws SpidOAuthException
-     * @throws SpidApiException
+     * @return SpidApiResponse the response received from the server
+     * @throws SpidOAuthException If an OAuth related error occurs
+     * @throws SpidApiException If an API related error occurs
      */
     public SpidApiResponse GET(SpidOAuthToken token, String endpoint, Map<String, String> properties) throws SpidOAuthException, SpidApiException {
         OAuthResourceResponse response;
@@ -172,9 +172,9 @@ public class SpidApiClient {
      * @param token      the token to use for the request
      * @param endpoint   what API endpoint to call
      * @param properties properties to supply to the API
-     * @return SpidApiResponse
-     * @throws SpidOAuthException
-     * @throws SpidApiException
+     * @return SpidApiResponse the response received from the server
+     * @throws SpidOAuthException If an OAuth related error occurs
+     * @throws SpidApiException If an API related error occurs
      */
     public SpidApiResponse POST(SpidOAuthToken token, String endpoint, Map<String, String> properties) throws SpidOAuthException, SpidApiException {
         OAuthResourceResponse response;
@@ -198,10 +198,41 @@ public class SpidApiClient {
     }
 
     /**
+     * Perform a POST request to the API with the supplied token and parameters.
+     *
+     * @param token      the token to use for the request
+     * @param endpoint   what API endpoint to call
+     * @param properties properties to supply to the API
+     * @return SpidApiResponse the response received from the server
+     * @throws SpidOAuthException If an OAuth related error occurs
+     * @throws SpidApiException If an API related error occurs
+     */
+    public SpidApiResponse DELETE(SpidOAuthToken token, String endpoint, Map<String, String> properties) throws SpidOAuthException, SpidApiException {
+        OAuthResourceResponse response;
+
+        try {
+            OAuthClientRequest request = new SpidOAuthBearerClientRequest(spidAPIBaseUrl + endpoint)
+                    .setAccessToken(getAccessToken(token))
+                    .addParameters(properties)
+                    .buildBodyMessage();
+
+            OAuthClient oAuthClient = new OAuthClient(connectionClientFactory.getClient());
+            response = oAuthClient.resource(request, OAuth.HttpMethod.DELETE, OAuthResourceResponse.class);
+
+        } catch (OAuthSystemException e) {
+            throw new SpidOAuthException(e);
+        } catch (OAuthProblemException e) {
+            throw new SpidOAuthException(e);
+        }
+
+        return handleApiResponse(response);
+    }
+
+    /**
      * Retrieves a server token.
      *
      * @return an access token with the type SpidOAuthTokenType.CLIENT
-     * @throws SpidOAuthException
+     * @throws SpidOAuthException If an OAuth related error occurs
      */
     public SpidOAuthToken getServerToken() throws SpidOAuthException {
         OAuthJSONAccessTokenResponse oAuthResponse;
@@ -232,7 +263,7 @@ public class SpidApiClient {
      *
      * @param code the received code
      * @return an access token with the type SpidOAuthTokenType.USER
-     * @throws SpidOAuthException
+     * @throws SpidOAuthException If an OAuth related error occurs
      */
     public SpidOAuthToken getUserToken(String code) throws SpidOAuthException {
         OAuthJSONAccessTokenResponse oAuthResponse;
@@ -265,7 +296,7 @@ public class SpidApiClient {
      * @param username The user's username
      * @param password The user's password
      * @return an access token with the type SpidOAuthTokenType.USER
-     * @throws SpidOAuthException
+     * @throws SpidOAuthException If an OAuth related error occurs
      */
     public SpidOAuthToken getUserToken(String username, String password) throws SpidOAuthException {
         OAuthJSONAccessTokenResponse oAuthResponse;
@@ -299,7 +330,7 @@ public class SpidApiClient {
      *
      * @param token the token to validate
      * @return access token
-     * @throws SpidOAuthException
+     * @throws SpidOAuthException If an OAuth related error occurs
      */
     private String getAccessToken(SpidOAuthToken token) throws SpidOAuthException {
         if (token == null) {
@@ -326,7 +357,7 @@ public class SpidApiClient {
      *
      * @param token the token to refresh
      * @return true if the token could be refreshed, false if not.
-     * @throws SpidOAuthException
+     * @throws SpidOAuthException If an OAuth related error occurs
      */
     private boolean refreshToken(SpidOAuthToken token) throws SpidOAuthException {
         OAuthJSONAccessTokenResponse oAuthResponse;

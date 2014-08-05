@@ -77,7 +77,7 @@ public class SpidApiResponse {
      * Will throw exception if data is not an array.
      *
      * @return JSONArray
-     * @throws SpidApiException
+     * @throws SpidApiException If an API related error occurs
      */
     public JSONArray getJsonArray() throws SpidApiException {
         if ( data == null) {
@@ -95,7 +95,7 @@ public class SpidApiResponse {
      * Will throw exception if data is not an object.
      *
      * @return JSONObject
-     * @throws SpidApiException
+     * @throws SpidApiException If an API related error occurs
      */
     public JSONObject getJsonData() throws SpidApiException {
         if ( data == null) {
@@ -112,6 +112,7 @@ public class SpidApiResponse {
      * Get response data field as string
      *
      * @return data
+     * @throws SpidApiException If an API related error occurs
      */
     public String getRawData() throws SpidApiException {
         return isArray() ? getJsonArray().toString() : isObject() ? getJsonData().toString() : getJsonValue("data");
