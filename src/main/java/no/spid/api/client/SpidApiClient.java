@@ -198,7 +198,7 @@ public class SpidApiClient {
     }
 
     /**
-     * Perform a POST request to the API with the supplied token and parameters.
+     * Perform a DELETE request to the API with the supplied token and parameters.
      *
      * @param token      the token to use for the request
      * @param endpoint   what API endpoint to call
@@ -214,7 +214,7 @@ public class SpidApiClient {
             OAuthClientRequest request = new SpidOAuthBearerClientRequest(spidAPIBaseUrl + endpoint)
                     .setAccessToken(getAccessToken(token))
                     .addParameters(properties)
-                    .buildBodyMessage();
+                    .buildQueryMessage();
 
             OAuthClient oAuthClient = new OAuthClient(connectionClientFactory.getClient());
             response = oAuthClient.resource(request, OAuth.HttpMethod.DELETE, OAuthResourceResponse.class);
