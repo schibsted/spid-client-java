@@ -69,7 +69,7 @@ public class SpidSecurityHelper {
      * @throws SpidApiException
      */
     public SpidApiResponse decryptAndValidateSignedResponse(SpidApiResponse spidResponse) throws SpidApiException {
-        String b64signature = spidResponse.getResponseSignture();
+        String b64signature = spidResponse.getResponseSignature();
         String algorithm = spidResponse.getResponseAlgorithm();
         String b64data = spidResponse.getRawData();
 
