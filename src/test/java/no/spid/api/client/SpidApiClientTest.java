@@ -28,7 +28,7 @@ public class SpidApiClientTest {
 
     @Test
     public void getAuthorizationURL() throws Exception {
-        assertEqualURLs("https://fooBaseUrl/oauth/authorize?response_type=code&redirect_uri=https%3A%2F%2Ffooserver%2Flogin&client_id=fooClient", getFooClient().getAuthorizationURL("https://fooserver/login"));
+        assertEqualURLs("https://fooBaseUrl/flow/login?response_type=code&redirect_uri=https%3A%2F%2Ffooserver%2Flogin&client_id=fooClient", getFooClient().getAuthorizationURL("https://fooserver/login"));
     }
 
     @Test

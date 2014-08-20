@@ -58,7 +58,7 @@ public class SpidApiClient {
         autoDecryptSignedResponses = builder.autoDecryptSignedResponses;
         spidAPIBaseUrl = spidBaseUrl + "/api/2";
         spidTokenUrl = spidBaseUrl + "/oauth/token";
-        spidAuthorizeUrl = spidBaseUrl + "/oauth/authorize";
+        spidAuthorizeUrl = spidBaseUrl + "/flow/login";
 
         securityHelper = builder.securityHelper;
         connectionClientFactory = builder.connectionClientFactory;
