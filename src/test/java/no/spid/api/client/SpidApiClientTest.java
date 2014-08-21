@@ -25,10 +25,25 @@ public class SpidApiClientTest {
     private String SUCCESSFUL_REFRESH_TOKEN = "90bc261093c26bbdd0cab54a891f7e06298b7556";
     private String SUCCESSFUL_TOKEN_RESPONSE = "{\"access_token\":\"" + SUCCESSFUL_ACCESS_TOKEN + "\",\"expires_in\":2419200,\"scope\":null,\"user_id\":false,\"is_admin\":false,\"refresh_token\":\"" + SUCCESSFUL_REFRESH_TOKEN + "\",\"server_time\":1398246344}";
     private String ACCESS_DENIED_ERROR = "{\"error\":\"expired_token\",\"error_code\":\"401\",\"type\":\"OAuthException\",\"error_description\":\"401 Unauthorized access!\"}";
+    private String FLOW_BASE_URL = "https://fooBaseUrl/flow";
+    private String FLOW_PARAMS = "?response_type=code&redirect_uri=https%3A%2F%2Ffooserver%2Flogin&client_id=fooClient";
 
     @Test
-    public void getAuthorizationURL() throws Exception {
-        assertEqualURLs("https://fooBaseUrl/flow/login?response_type=code&redirect_uri=https%3A%2F%2Ffooserver%2Flogin&client_id=fooClient", getFooClient().getAuthorizationURL("https://fooserver/login"));
+    public void getLoginUrl() throws Exception {
+        String expectedLoginUrl = FLOW_BASE_URL + "/login" + FLOW_PARAMS;
+        assertEqualURLs(expectedLoginUrl, getFooClient().getFlowUrl("login", "https://fooserver/login"));
+    }
+
+    @Test
+    public void getSignupUrl() throws Exception {
+        String expectedLoginUrl = FLOW_BASE_URL + "/signup" + FLOW_PARAMS;
+        assertEqualURLs(expectedLoginUrl, getFooClient().getFlowUrl("signup", "https://fooserver/login"));
+    }
+
+    @Test
+    public void getCheckoutUrl() throws Exception {
+        String expectedLoginUrl = FLOW_BASE_URL + "/checkout" + FLOW_PARAMS;
+        assertEqualURLs(expectedLoginUrl, getFooClient().getFlowUrl("checkout", "https://fooserver/login"));
     }
 
     @Test

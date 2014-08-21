@@ -17,6 +17,7 @@ import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 
+
 import java.util.Map;
 
 /**
@@ -33,7 +34,7 @@ public class SpidApiClient {
     private String spidBaseUrl;
     private String spidAPIBaseUrl;
     private String spidTokenUrl;
-    private String spidAuthorizeUrl;
+    private String spidFlowUrl;
 
     private SpidSecurityHelper securityHelper;
     private SpidConnectionClientFactory connectionClientFactory;
@@ -58,25 +59,32 @@ public class SpidApiClient {
         autoDecryptSignedResponses = builder.autoDecryptSignedResponses;
         spidAPIBaseUrl = spidBaseUrl + "/api/2";
         spidTokenUrl = spidBaseUrl + "/oauth/token";
-        spidAuthorizeUrl = spidBaseUrl + "/flow/login";
+        spidFlowUrl = spidBaseUrl + "/flow/";
 
         securityHelper = builder.securityHelper;
         connectionClientFactory = builder.connectionClientFactory;
     }
 
     /**
-     * Get the authorization url.
+     * Get a URL to start a named flow
      *
-     * @param redirectUrl where to redirect the user after successful login
-     * @return the consntructed url
-     * @throws SpidOAuthException If an OAuth related error occurs
+     * Valid flow names:
+     * - login
+     * - signup
+     * - checkout
+     *
+     * @param name the name of the flow you want to start
+     * @param redirectUrl where to redirect the user after successful flow end
+     * @return the constructed URL to start the requested flow
+     * @throws SpidOAuthException
      */
-    public String getAuthorizationURL(String redirectUrl) throws SpidOAuthException {
+    public String getFlowUrl(String name, String redirectUrl) throws SpidOAuthException{
         OAuthClientRequest request;
+        String flow = spidFlowUrl + name;
 
         try {
             request = OAuthClientRequest
-                    .authorizationLocation(spidAuthorizeUrl)
+                    .authorizationLocation(flow)
                     .setClientId(clientId)
                     .setRedirectURI(redirectUrl)
                     .setResponseType(OAuth.OAUTH_CODE)
@@ -84,7 +92,6 @@ public class SpidApiClient {
         } catch (OAuthSystemException e) {
             throw new SpidOAuthException(e);
         }
-
         return request.getLocationUri();
     }
 
