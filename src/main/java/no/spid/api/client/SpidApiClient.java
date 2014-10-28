@@ -21,7 +21,7 @@ import org.apache.oltu.oauth2.common.message.types.GrantType;
 import java.util.Map;
 
 /**
- * The SpidApiClient can be used to login users and get their user tokens, get server tokens. When a token is aquired
+ * The SpidApiClient can be used to login users and get their user tokens, get server tokens. When a token is acquired
  * the client can be used to consume the services of the SPiD API.
  *
  * http://techdocs.spid.no
@@ -423,12 +423,12 @@ public class SpidApiClient {
         }
 
         public ClientBuilder autoRenew(boolean autoRenew) {
-            this.autorenew = autorenew;
+            this.autorenew = autoRenew;
             return this;
         }
 
         public ClientBuilder autoRefresh(boolean autoRefresh) {
-            this.autorefresh = autorefresh;
+            this.autorefresh = autoRefresh;
             return this;
         }
 
