@@ -15,6 +15,7 @@ import org.apache.oltu.oauth2.common.token.BasicOAuthToken;
 import org.junit.Test;
 
 import java.net.URL;
+import java.util.Arrays;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -269,19 +270,10 @@ public class SpidApiClientTest {
         String[] actualParameters = uActual.getQuery().split("&");
         String[] expectedParameters = uExpected.getQuery().split("&");
 
-        assertEquals(actualParameters.length, expectedParameters.length);
-
-        for (String actualParameter:actualParameters) {
-            boolean match = false;
-            for (String expectedParameter:expectedParameters) {
-                if (actualParameter.equals(expectedParameter)) {
-                    match = true;
-                    break;
-                }
-            }
-            if (!match) {
-                fail("URLs are not equal!");
-            }
+        Arrays.sort(actualParameters);
+        Arrays.sort(expectedParameters);
+        if (!Arrays.equals(actualParameters, expectedParameters)) {
+            fail("URLs are not equal!");
         }
     }
 }
