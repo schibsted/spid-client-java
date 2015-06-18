@@ -11,12 +11,16 @@ import org.apache.oltu.oauth2.client.response.OAuthClientResponse;
 import org.apache.oltu.oauth2.client.response.OAuthClientResponseFactory;
 import org.apache.oltu.oauth2.client.response.OAuthJSONAccessTokenResponse;
 import org.apache.oltu.oauth2.client.response.OAuthResourceResponse;
+import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
+import org.apache.oltu.oauth2.common.message.types.GrantType;
 import org.apache.oltu.oauth2.common.token.BasicOAuthToken;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
 
 import java.net.URL;
 import java.util.Arrays;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -25,6 +29,8 @@ public class SpidApiClientTest {
     private String SUCCESSFUL_ACCESS_TOKEN = "44005d748f89a86b6b1ad9d1ef833dc55e0d6244";
     private String SUCCESSFUL_REFRESH_TOKEN = "90bc261093c26bbdd0cab54a891f7e06298b7556";
     private String SUCCESSFUL_TOKEN_RESPONSE = "{\"access_token\":\"" + SUCCESSFUL_ACCESS_TOKEN + "\",\"expires_in\":2419200,\"scope\":null,\"user_id\":false,\"is_admin\":false,\"refresh_token\":\"" + SUCCESSFUL_REFRESH_TOKEN + "\",\"server_time\":1398246344}";
+    private String SUCCESSFUL_RENEWED_ACCESS_TOKEN = "44005d748f89a86b6b1ad9d1ef833dc55e0d6244";
+    private String SUCCESSFUL_RENEWED_TOKEN_RESPONSE = "{\"access_token\":\"" + SUCCESSFUL_RENEWED_ACCESS_TOKEN + "\",\"expires_in\":2419200,\"scope\":null,\"user_id\":false,\"is_admin\":false,\"refresh_token\":\"" + SUCCESSFUL_REFRESH_TOKEN + "\",\"server_time\":1398246344}";
     private String ACCESS_DENIED_ERROR = "{\"error\":\"expired_token\",\"error_code\":\"401\",\"type\":\"OAuthException\",\"error_description\":\"401 Unauthorized access!\"}";
     private String FLOW_BASE_URL = "https://fooBaseUrl/flow";
     private String FLOW_PARAMS = "?response_type=code&redirect_uri=https%3A%2F%2Ffooserver%2Flogin&client_id=fooClient";
@@ -164,6 +170,23 @@ public class SpidApiClientTest {
         assertNotEquals(expiresAt, token.getExpiresAt());
     }
 
+    @Test
+    public void testRenewOnFailedTokenRefresh() throws Exception {
+        SpidUrlConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryForAutoRenew(
+                "{\"VALUE\":\"NOT IMPORTANT\"}",
+                "application/json",
+                200,
+                OAuthResourceResponse.class);
+
+        SpidApiClient spidClient = new SpidApiClient.ClientBuilder("ID", "SECRET", "SIGNSECRET", "https://redirect.uri", "https://spiddomain.no")
+                .connectionClientFactory(connectionClientFactory)
+                .build();
+
+        SpidOAuthToken token = getExpiredMockToken();
+        SpidApiResponse response = spidClient.GET(token, "/me", null);
+
+        assertThat(token.getAccessToken(), is(SUCCESSFUL_RENEWED_ACCESS_TOKEN));
+    }
 
     /** END OF TESTS **/
 
@@ -250,6 +273,39 @@ public class SpidApiClientTest {
     }
 
     /**
+     * Creates a mock http client that gives a fixed response and in addition responds successfully to a new token request while failing refresh token request
+     * request.
+     *
+     * @param responseBody the response
+     * @param contentType  the content type
+     * @param responseCode the response code
+     * @param responseClass the response type (class)
+     * @param <T> must be of type OAuthClientResponse
+     * @return a http client that will give the supplied response to all execute calls
+     */
+    private <T extends OAuthClientResponse> SpidUrlConnectionClientFactory getMockedConnectionClientFactoryForAutoRenew(String responseBody, String contentType, Integer responseCode, Class<T> responseClass) {
+        HttpClient httpClient;
+
+        try {
+            httpClient = mock(HttpClient.class);
+            OAuthJSONAccessTokenResponse responseToken = OAuthClientResponseFactory.createCustomResponse(SUCCESSFUL_RENEWED_TOKEN_RESPONSE, "application/json", 200, OAuthJSONAccessTokenResponse.class);
+            T response = OAuthClientResponseFactory.createCustomResponse(responseBody, contentType, responseCode, responseClass);
+            // NB Order matters on matching
+            when(httpClient.execute(any(OAuthClientRequest.class), anyMapOf(String.class, String.class), anyString(), any(Class.class))).thenReturn(response);
+            when(httpClient.execute(argThat(new OauthGrantTypeMatcher(GrantType.REFRESH_TOKEN)), anyMapOf(String.class, String.class), anyString(), eq(OAuthJSONAccessTokenResponse.class))).thenThrow(OAuthProblemException.error("Unable to refresh"));
+            when(httpClient.execute(argThat(new OauthGrantTypeMatcher(GrantType.CLIENT_CREDENTIALS)), anyMapOf(String.class, String.class), anyString(), eq(OAuthJSONAccessTokenResponse.class))).thenReturn(responseToken);
+        } catch (Exception e) {
+            return null;
+        }
+
+        // Build spid client with mocked http client
+        SpidUrlConnectionClientFactory connectionClientFactory = mock(SpidUrlConnectionClientFactory.class);
+        when(connectionClientFactory.getClient()).thenReturn(httpClient);
+
+        return connectionClientFactory;
+    }
+
+    /**
      * Utility method to compare two urls. Ignoring order on parameters.
      *
      * @param urlExpected expected url
@@ -274,6 +330,33 @@ public class SpidApiClientTest {
         Arrays.sort(expectedParameters);
         if (!Arrays.equals(actualParameters, expectedParameters)) {
             fail("URLs are not equal!");
+        }
+    }
+
+    /**
+     * Custom ArgumentMatcher to be able take different paths in mock depending on a OAutClientRequests token GrantType
+     */
+    private class OauthGrantTypeMatcher extends ArgumentMatcher<OAuthClientRequest> {
+
+        private final GrantType wantedGrantType;
+
+        public OauthGrantTypeMatcher(final GrantType wantedGrantType) {
+            this.wantedGrantType = wantedGrantType;
+        }
+
+        @Override
+        public boolean matches(final Object argument) {
+            if (argument != null && ((OAuthClientRequest) argument).getBody() != null) {
+                String body = ((OAuthClientRequest) argument).getBody();
+                for (String s : body.split("&")) {
+                    String[] split = s.split("=");
+                    if ("grant_type".equals(split[0])) {
+                        return GrantType.valueOf(split[1].toUpperCase()).equals(wantedGrantType);
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }
