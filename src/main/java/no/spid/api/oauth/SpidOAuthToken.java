@@ -14,11 +14,15 @@ public class SpidOAuthToken {
     private SpidOAuthTokenType type;
 
     public SpidOAuthToken(OAuthToken basicToken, SpidOAuthTokenType type) {
+        this(basicToken, type, System.currentTimeMillis() + basicToken.getExpiresIn() * 1000);
+    }
+
+    public SpidOAuthToken(OAuthToken basicToken, SpidOAuthTokenType type, long expiresAt) {
         accessToken = basicToken.getAccessToken();
         refreshToken = basicToken.getRefreshToken();
         scope = basicToken.getScope();
         expiresIn = basicToken.getExpiresIn();
-        expiresAt = System.currentTimeMillis() + expiresIn * 1000;
+        this.expiresAt = expiresAt;
         this.type = type;
     }
 

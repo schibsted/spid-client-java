@@ -364,9 +364,8 @@ public class SpidApiClient {
      *
      * @param token the token to refresh
      * @return true if the token could be refreshed, false if not.
-     * @throws SpidOAuthException If an OAuth related error occurs
      */
-    private boolean refreshToken(SpidOAuthToken token) throws SpidOAuthException {
+    private boolean refreshToken(SpidOAuthToken token) {
         OAuthJSONAccessTokenResponse oAuthResponse;
 
         try {
@@ -383,9 +382,9 @@ public class SpidApiClient {
             oAuthResponse = oAuthClient.accessToken(request);
 
         } catch (OAuthSystemException e) {
-            throw new SpidOAuthException(e);
+            return false;
         } catch (OAuthProblemException e) {
-            throw new SpidOAuthException(e);
+            return false;
         }
 
         SpidOAuthToken newToken = new SpidOAuthToken(oAuthResponse.getOAuthToken(), token.getType());
