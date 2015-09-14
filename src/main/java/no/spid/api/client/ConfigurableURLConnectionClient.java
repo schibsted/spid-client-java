@@ -5,11 +5,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Map;
+
+import no.spid.api.connection.ConfigHelper;
 
 import org.apache.oltu.oauth2.client.HttpClient;
 import org.apache.oltu.oauth2.client.request.OAuthClientRequest;
@@ -27,13 +28,9 @@ import org.apache.oltu.oauth2.common.utils.OAuthUtils;
  */
 public class ConfigurableURLConnectionClient implements HttpClient {
 
-    public static final String SPID_PROXY_HOST = "https.proxyHost";
-    public static final String SPID_PROXY_PORT = "https.proxyPort";
-    public static final String SPID_READ_TIMEOUT = "spid.readTimeout";
-    public static final String SPID_CONNECT_TIMEOUT = "spid.connectTimeout";
-    private int readTimeout = getPropertyInt(SPID_READ_TIMEOUT);
-    private int connectTimeout = getPropertyInt(SPID_CONNECT_TIMEOUT);
-    private Proxy proxy = getProxy();
+    private int readTimeout = ConfigHelper.getReadTimeout();
+    private int connectTimeout = ConfigHelper.getConnectTimeout();
+    private Proxy proxy = ConfigHelper.getProxy();
 
     public ConfigurableURLConnectionClient() {
     }
@@ -108,20 +105,6 @@ public class ConfigurableURLConnectionClient implements HttpClient {
 
     public void shutdown() {
         // Nothing to do here
-    }
-
-    protected Proxy getProxy() {
-        String address = System.getProperty(SPID_PROXY_HOST);
-        int port = System.getProperty(SPID_PROXY_PORT) != null ? Integer.parseInt(System.getProperty(SPID_PROXY_PORT)) : 3128;
-        if (address != null) {
-            return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(address, port));
-        } else {
-            return null;
-        }
-    }
-
-    protected static int getPropertyInt(String key) {
-        return System.getProperty(key) != null ? Integer.parseInt(System.getProperty(key)) : 6000;
     }
 
 }
