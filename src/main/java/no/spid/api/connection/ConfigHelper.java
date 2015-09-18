@@ -14,13 +14,17 @@ public class ConfigHelper {
 
     private static InetSocketAddress getProxySocketAddress() {
         String address = System.getProperty(SPID_PROXY_HOST);
-        int port = System.getProperty(SPID_PROXY_PORT) != null ? Integer.parseInt(System.getProperty(SPID_PROXY_PORT)) : 3128;
+        int port = getProxyPort();
         if (address != null) {
             return new InetSocketAddress(address, port);
-        }
-        else {
+        } else {
             return null;
         }
+    }
+
+    public static int getProxyPort() {
+        int port = System.getProperty(SPID_PROXY_PORT) != null ? Integer.parseInt(System.getProperty(SPID_PROXY_PORT)) : 3128;
+        return port;
     }
 
     public static InetAddress getProxyInetAddress() {

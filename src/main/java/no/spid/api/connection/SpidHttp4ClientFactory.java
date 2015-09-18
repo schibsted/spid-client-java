@@ -23,7 +23,7 @@ public class SpidHttp4ClientFactory implements SpidConnectionClientFactory {
         requestConfigBuilder.setConnectTimeout(ConfigHelper.getConnectTimeout())
                 .setSocketTimeout(ConfigHelper.getReadTimeout());
         if (ConfigHelper.getProxyInetAddress() != null) {
-            HttpHost proxy = new HttpHost(ConfigHelper.getProxyInetAddress());
+            HttpHost proxy = new HttpHost(ConfigHelper.getProxyInetAddress(), ConfigHelper.getProxyPort());
             requestConfigBuilder.setProxy(proxy);
         }
         RequestConfig requestConfig = requestConfigBuilder.build();
