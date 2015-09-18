@@ -1,6 +1,6 @@
 package no.spid.api.client;
 
-import no.spid.api.connection.SpidUrlConnectionClientFactory;
+import no.spid.api.connection.SpidHttp4ClientFactory;
 import no.spid.api.exceptions.SpidApiException;
 import no.spid.api.exceptions.SpidOAuthException;
 import no.spid.api.oauth.SpidOAuthToken;
@@ -60,7 +60,7 @@ public class SpidApiClientTest {
 
     @Test
     public void deleteRequest() throws Exception {
-        SpidUrlConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
+        SpidHttp4ClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
                 "{\"name\":\"SPP Container\",\"version\":\"0.2\",\"api\":2,\"code\":200,\"data\":\"VGhpcyBkYXRhIHdhcyBlbmNyeXB0ZWQh\",\"algorithm\":\"HMAC-SHA256\",\"sig\":\"9epFW_MQKbRUPSmKLY_tShahRxtddL9JY-vGVEOf_IA\"}",
                 "application/json",
                 200,
@@ -78,7 +78,7 @@ public class SpidApiClientTest {
     @Test
     public void getServerToken() throws Exception {
         //Create a mock http client that gives a fixed response
-        SpidUrlConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
+        SpidHttp4ClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
                 SUCCESSFUL_TOKEN_RESPONSE,
                 "application/json",
                 200,
@@ -97,7 +97,7 @@ public class SpidApiClientTest {
 
     @Test
     public void readAndDecryptSignedResponse() throws Exception {
-        SpidUrlConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
+        SpidHttp4ClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
                 "{\"name\":\"SPP Container\",\"version\":\"0.2\",\"api\":2,\"data\":\"VGhpcyBkYXRhIHdhcyBlbmNyeXB0ZWQh\",\"algorithm\":\"HMAC-SHA256\",\"sig\":\"9epFW_MQKbRUPSmKLY_tShahRxtddL9JY-vGVEOf_IA\"}",
                 "application/json",
                 200,
@@ -113,7 +113,7 @@ public class SpidApiClientTest {
 
     @Test(expected = SpidApiException.class)
     public void testApiError() throws Exception {
-        SpidUrlConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
+        SpidHttp4ClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
                 "NOT IMPORTANT",
                 "application/json",
                 403,
@@ -129,7 +129,7 @@ public class SpidApiClientTest {
 
     @Test
     public void handleApiError() {
-        SpidUrlConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
+        SpidHttp4ClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
                 ACCESS_DENIED_ERROR,
                 "application/json",
                 403,
@@ -152,7 +152,7 @@ public class SpidApiClientTest {
 
     @Test
     public void testRefreshToken() throws Exception {
-        SpidUrlConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponseAndToken(
+        SpidHttp4ClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponseAndToken(
                 "{\"VALUE\":\"NOT IMPORTANT\"}",
                 "application/json",
                 200,
@@ -172,7 +172,7 @@ public class SpidApiClientTest {
 
     @Test
     public void testRenewOnFailedTokenRefresh() throws Exception {
-        SpidUrlConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryForAutoRenew(
+        SpidHttp4ClientFactory connectionClientFactory = getMockedConnectionClientFactoryForAutoRenew(
                 "{\"VALUE\":\"NOT IMPORTANT\"}",
                 "application/json",
                 200,
@@ -222,7 +222,7 @@ public class SpidApiClientTest {
      * @param <T> must be of type OAuthClientResponse
      * @return a http client that will give the supplied response to all execute calls
      */
-    private <T extends OAuthClientResponse> SpidUrlConnectionClientFactory getMockedConnectionClientFactoryWithFixedResponse(String responseBody, String contentType, Integer responseCode, Class<T> responseClass) {
+    private <T extends OAuthClientResponse> SpidHttp4ClientFactory getMockedConnectionClientFactoryWithFixedResponse(String responseBody, String contentType, Integer responseCode, Class<T> responseClass) {
         HttpClient httpClient;
 
         try {
@@ -234,7 +234,7 @@ public class SpidApiClientTest {
         }
 
         // Build spid client with mocked http client
-        SpidUrlConnectionClientFactory connectionClientFactory = mock(SpidUrlConnectionClientFactory.class);
+        SpidHttp4ClientFactory connectionClientFactory = mock(SpidHttp4ClientFactory.class);
         when(connectionClientFactory.getClient()).thenReturn(httpClient);
 
         return connectionClientFactory;
@@ -251,7 +251,7 @@ public class SpidApiClientTest {
      * @param <T> must be of type OAuthClientResponse
      * @return a http client that will give the supplied response to all execute calls
      */
-    private <T extends OAuthClientResponse> SpidUrlConnectionClientFactory getMockedConnectionClientFactoryWithFixedResponseAndToken(String responseBody, String contentType, Integer responseCode, Class<T> responseClass) {
+    private <T extends OAuthClientResponse> SpidHttp4ClientFactory getMockedConnectionClientFactoryWithFixedResponseAndToken(String responseBody, String contentType, Integer responseCode, Class<T> responseClass) {
         HttpClient httpClient;
 
         try {
@@ -266,7 +266,7 @@ public class SpidApiClientTest {
         }
 
         // Build spid client with mocked http client
-        SpidUrlConnectionClientFactory connectionClientFactory = mock(SpidUrlConnectionClientFactory.class);
+        SpidHttp4ClientFactory connectionClientFactory = mock(SpidHttp4ClientFactory.class);
         when(connectionClientFactory.getClient()).thenReturn(httpClient);
 
         return connectionClientFactory;
@@ -283,7 +283,7 @@ public class SpidApiClientTest {
      * @param <T> must be of type OAuthClientResponse
      * @return a http client that will give the supplied response to all execute calls
      */
-    private <T extends OAuthClientResponse> SpidUrlConnectionClientFactory getMockedConnectionClientFactoryForAutoRenew(String responseBody, String contentType, Integer responseCode, Class<T> responseClass) {
+    private <T extends OAuthClientResponse> SpidHttp4ClientFactory getMockedConnectionClientFactoryForAutoRenew(String responseBody, String contentType, Integer responseCode, Class<T> responseClass) {
         HttpClient httpClient;
 
         try {
@@ -299,7 +299,7 @@ public class SpidApiClientTest {
         }
 
         // Build spid client with mocked http client
-        SpidUrlConnectionClientFactory connectionClientFactory = mock(SpidUrlConnectionClientFactory.class);
+        SpidHttp4ClientFactory connectionClientFactory = mock(SpidHttp4ClientFactory.class);
         when(connectionClientFactory.getClient()).thenReturn(httpClient);
 
         return connectionClientFactory;
