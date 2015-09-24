@@ -43,20 +43,20 @@ public class ConfigHelper {
         }
     }
 
-    protected static int getPropertyInt(String key) {
-        return System.getProperty(key) != null ? Integer.parseInt(System.getProperty(key)) : 6000;
+    protected static int getPropertyInt(String key, int defaultValue) {
+        return System.getProperty(key) != null ? Integer.parseInt(System.getProperty(key)) : defaultValue;
     }
 
     public static int getMaxConnections() {
-        return getPropertyInt(SPID_MAX_CONNECTION);
+        return getPropertyInt(SPID_MAX_CONNECTION, 25);
 
     }
 
     public static int getReadTimeout() {
-        return getPropertyInt(SPID_READ_TIMEOUT);
+        return getPropertyInt(SPID_READ_TIMEOUT, 6000);
     }
 
     public static int getConnectTimeout() {
-        return getPropertyInt(SPID_CONNECT_TIMEOUT);
+        return getPropertyInt(SPID_CONNECT_TIMEOUT, 6000);
     }
 }
