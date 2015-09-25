@@ -4,7 +4,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 
-public class ConfigHelper {
+public class SystemPropertiesSpidClientConfig implements SpidClientConfig {
 
     public static final String SPID_PROXY_HOST = "https.proxyHost";
     public static final String SPID_PROXY_PORT = "https.proxyPort";
@@ -12,7 +12,7 @@ public class ConfigHelper {
     public static final String SPID_CONNECT_TIMEOUT = "spid.connectTimeout";
     public static final String SPID_MAX_CONNECTION = "spid.maxConnection";
 
-    private static InetSocketAddress getProxySocketAddress() {
+    private InetSocketAddress getProxySocketAddress() {
         String address = System.getProperty(SPID_PROXY_HOST);
         int port = getProxyPort();
         if (address != null) {
@@ -22,19 +22,19 @@ public class ConfigHelper {
         }
     }
 
-    public static int getProxyPort() {
+    public int getProxyPort() {
         int port = System.getProperty(SPID_PROXY_PORT) != null ? Integer.parseInt(System.getProperty(SPID_PROXY_PORT)) : 3128;
         return port;
     }
 
-    public static InetAddress getProxyInetAddress() {
+    public InetAddress getProxyInetAddress() {
         if (getProxySocketAddress() != null) {
             return getProxySocketAddress().getAddress();
         }
         return null;
     }
 
-    public static Proxy getProxy() {
+    public Proxy getProxy() {
         InetSocketAddress socketAddress = getProxySocketAddress();
         if (socketAddress != null) {
             return new Proxy(Proxy.Type.HTTP, socketAddress);
@@ -43,20 +43,20 @@ public class ConfigHelper {
         }
     }
 
-    protected static int getPropertyInt(String key, int defaultValue) {
+    protected int getPropertyInt(String key, int defaultValue) {
         return System.getProperty(key) != null ? Integer.parseInt(System.getProperty(key)) : defaultValue;
     }
 
-    public static int getMaxConnections() {
+    public int getMaxConnections() {
         return getPropertyInt(SPID_MAX_CONNECTION, 25);
 
     }
 
-    public static int getReadTimeout() {
+    public int getReadTimeout() {
         return getPropertyInt(SPID_READ_TIMEOUT, 6000);
     }
 
-    public static int getConnectTimeout() {
+    public int getConnectTimeout() {
         return getPropertyInt(SPID_CONNECT_TIMEOUT, 6000);
     }
 }

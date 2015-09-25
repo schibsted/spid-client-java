@@ -11,19 +11,26 @@ import org.apache.oltu.oauth2.httpclient4.HttpClient4;
  * Used to feed the SpidApiClient with URLConnectionClient's to connect to the API. It is using apache client.
  */
 public class SpidHttp4ClientFactory implements SpidConnectionClientFactory {
-    private static PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+    private final PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+    private SpidClientConfig config;
 
-    static {
-        connectionManager.setMaxTotal(ConfigHelper.getMaxConnections());
-        connectionManager.setDefaultMaxPerRoute(ConfigHelper.getMaxConnections());
+    public SpidHttp4ClientFactory() {
+        this(new SystemPropertiesSpidClientConfig());
+    }
+
+    public SpidHttp4ClientFactory(SpidClientConfig config) {
+        this.config = config;
+        connectionManager.setMaxTotal(config.getMaxConnections());
+        connectionManager.setDefaultMaxPerRoute(config.getMaxConnections());
     }
 
     public HttpClient getClient() {
         RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
-        requestConfigBuilder.setConnectTimeout(ConfigHelper.getConnectTimeout())
-                .setSocketTimeout(ConfigHelper.getReadTimeout());
-        if (ConfigHelper.getProxyInetAddress() != null) {
-            HttpHost proxy = new HttpHost(ConfigHelper.getProxyInetAddress(), ConfigHelper.getProxyPort());
+        requestConfigBuilder.setConnectTimeout(config.getConnectTimeout())
+                .setConnectionRequestTimeout(config.getConnectTimeout())
+                .setSocketTimeout(config.getReadTimeout());
+        if (config.getProxyInetAddress() != null) {
+            HttpHost proxy = new HttpHost(config.getProxyInetAddress(), config.getProxyPort());
             requestConfigBuilder.setProxy(proxy);
         }
         RequestConfig requestConfig = requestConfigBuilder.build();
