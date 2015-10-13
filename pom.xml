@@ -9,7 +9,7 @@
 
     <groupId>no.spid</groupId>
     <artifactId>no.spid.api.client</artifactId>
-    <version>1.6-SNAPSHOT</version>
+    <version>1.5</version>
 
     <name>SPiD API Client</name>
     <description>A client library to facilitate usage of the SPiD API</description>
