@@ -1,10 +1,21 @@
 package no.spid.api.client;
 
-import no.spid.api.connection.SpidHttp4ClientFactory;
-import no.spid.api.exceptions.SpidApiException;
-import no.spid.api.exceptions.SpidOAuthException;
-import no.spid.api.oauth.SpidOAuthToken;
-import no.spid.api.oauth.SpidOAuthTokenType;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMapOf;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.net.URL;
+import java.util.Arrays;
+
 import org.apache.oltu.oauth2.client.HttpClient;
 import org.apache.oltu.oauth2.client.request.OAuthClientRequest;
 import org.apache.oltu.oauth2.client.response.OAuthClientResponse;
@@ -12,25 +23,27 @@ import org.apache.oltu.oauth2.client.response.OAuthClientResponseFactory;
 import org.apache.oltu.oauth2.client.response.OAuthJSONAccessTokenResponse;
 import org.apache.oltu.oauth2.client.response.OAuthResourceResponse;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
+import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 import org.apache.oltu.oauth2.common.token.BasicOAuthToken;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 
-import java.net.URL;
-import java.util.Arrays;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import no.spid.api.connection.SpidConnectionClientFactory;
+import no.spid.api.exceptions.SpidApiException;
+import no.spid.api.exceptions.SpidOAuthException;
+import no.spid.api.oauth.SpidOAuthToken;
+import no.spid.api.oauth.SpidOAuthTokenType;
 
 public class SpidApiClientTest {
 
     private String SUCCESSFUL_ACCESS_TOKEN = "44005d748f89a86b6b1ad9d1ef833dc55e0d6244";
     private String SUCCESSFUL_REFRESH_TOKEN = "90bc261093c26bbdd0cab54a891f7e06298b7556";
-    private String SUCCESSFUL_TOKEN_RESPONSE = "{\"access_token\":\"" + SUCCESSFUL_ACCESS_TOKEN + "\",\"expires_in\":2419200,\"scope\":null,\"user_id\":false,\"is_admin\":false,\"refresh_token\":\"" + SUCCESSFUL_REFRESH_TOKEN + "\",\"server_time\":1398246344}";
+    private String SUCCESSFUL_TOKEN_RESPONSE = "{\"access_token\":\"" + SUCCESSFUL_ACCESS_TOKEN
+            + "\",\"expires_in\":2419200,\"scope\":null,\"user_id\":false,\"is_admin\":false,\"refresh_token\":\"" + SUCCESSFUL_REFRESH_TOKEN + "\",\"server_time\":1398246344}";
     private String SUCCESSFUL_RENEWED_ACCESS_TOKEN = "44005d748f89a86b6b1ad9d1ef833dc55e0d6244";
-    private String SUCCESSFUL_RENEWED_TOKEN_RESPONSE = "{\"access_token\":\"" + SUCCESSFUL_RENEWED_ACCESS_TOKEN + "\",\"expires_in\":2419200,\"scope\":null,\"user_id\":false,\"is_admin\":false,\"refresh_token\":\"" + SUCCESSFUL_REFRESH_TOKEN + "\",\"server_time\":1398246344}";
+    private String SUCCESSFUL_RENEWED_TOKEN_RESPONSE = "{\"access_token\":\"" + SUCCESSFUL_RENEWED_ACCESS_TOKEN
+            + "\",\"expires_in\":2419200,\"scope\":null,\"user_id\":false,\"is_admin\":false,\"refresh_token\":\"" + SUCCESSFUL_REFRESH_TOKEN + "\",\"server_time\":1398246344}";
     private String ACCESS_DENIED_ERROR = "{\"error\":\"expired_token\",\"error_code\":\"401\",\"type\":\"OAuthException\",\"error_description\":\"401 Unauthorized access!\"}";
     private String FLOW_BASE_URL = "https://fooBaseUrl/flow";
     private String FLOW_PARAMS = "?response_type=code&redirect_uri=https%3A%2F%2Ffooserver%2Flogin&client_id=fooClient";
@@ -55,12 +68,13 @@ public class SpidApiClientTest {
 
     @Test
     public void getLogoutUrl() throws Exception {
-        assertEqualURLs("https://fooBaseUrl/logout?redirect_uri=https%3A%2F%2Ffooserver%2Flogout&oauth_token=accesstoken", getFooClient().getLogoutURL(getMockToken(), "https://fooserver/logout"));
+        assertEqualURLs("https://fooBaseUrl/logout?redirect_uri=https%3A%2F%2Ffooserver%2Flogout&oauth_token=accesstoken",
+                getFooClient().getLogoutURL(getMockToken(), "https://fooserver/logout"));
     }
 
     @Test
     public void deleteRequest() throws Exception {
-        SpidHttp4ClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
+        SpidConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
                 "{\"name\":\"SPP Container\",\"version\":\"0.2\",\"api\":2,\"code\":200,\"data\":\"VGhpcyBkYXRhIHdhcyBlbmNyeXB0ZWQh\",\"algorithm\":\"HMAC-SHA256\",\"sig\":\"9epFW_MQKbRUPSmKLY_tShahRxtddL9JY-vGVEOf_IA\"}",
                 "application/json",
                 200,
@@ -77,8 +91,8 @@ public class SpidApiClientTest {
 
     @Test
     public void getServerToken() throws Exception {
-        //Create a mock http client that gives a fixed response
-        SpidHttp4ClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
+        // Create a mock http client that gives a fixed response
+        SpidConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
                 SUCCESSFUL_TOKEN_RESPONSE,
                 "application/json",
                 200,
@@ -97,7 +111,7 @@ public class SpidApiClientTest {
 
     @Test
     public void readAndDecryptSignedResponse() throws Exception {
-        SpidHttp4ClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
+        SpidConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
                 "{\"name\":\"SPP Container\",\"version\":\"0.2\",\"api\":2,\"data\":\"VGhpcyBkYXRhIHdhcyBlbmNyeXB0ZWQh\",\"algorithm\":\"HMAC-SHA256\",\"sig\":\"9epFW_MQKbRUPSmKLY_tShahRxtddL9JY-vGVEOf_IA\"}",
                 "application/json",
                 200,
@@ -113,7 +127,7 @@ public class SpidApiClientTest {
 
     @Test(expected = SpidApiException.class)
     public void testApiError() throws Exception {
-        SpidHttp4ClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
+        SpidConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
                 "NOT IMPORTANT",
                 "application/json",
                 403,
@@ -128,8 +142,8 @@ public class SpidApiClientTest {
     }
 
     @Test
-    public void handleApiError() {
-        SpidHttp4ClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
+    public void handleApiError() throws Exception {
+        SpidConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
                 ACCESS_DENIED_ERROR,
                 "application/json",
                 403,
@@ -141,7 +155,7 @@ public class SpidApiClientTest {
 
         try {
             SpidApiResponse response = spidClient.GET(getMockToken(), "/me", null);
-        } catch ( SpidOAuthException e) {
+        } catch (SpidOAuthException e) {
             fail("This exception was not expected!");
         } catch (SpidApiException e) {
             assertEquals("403:" + ACCESS_DENIED_ERROR, e.getMessage());
@@ -152,7 +166,7 @@ public class SpidApiClientTest {
 
     @Test
     public void testRefreshToken() throws Exception {
-        SpidHttp4ClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponseAndToken(
+        SpidConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponseAndToken(
                 "{\"VALUE\":\"NOT IMPORTANT\"}",
                 "application/json",
                 200,
@@ -172,7 +186,7 @@ public class SpidApiClientTest {
 
     @Test
     public void testRenewOnFailedTokenRefresh() throws Exception {
-        SpidHttp4ClientFactory connectionClientFactory = getMockedConnectionClientFactoryForAutoRenew(
+        SpidConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryForAutoRenew(
                 "{\"VALUE\":\"NOT IMPORTANT\"}",
                 "application/json",
                 200,
@@ -215,91 +229,102 @@ public class SpidApiClientTest {
     /**
      * Creates a mock http client that gives a fixed response.
      *
-     * @param responseBody the response
-     * @param contentType  the content type
-     * @param responseCode the response code
-     * @param responseClass the response type (class)
-     * @param <T> must be of type OAuthClientResponse
+     * @param responseBody
+     *            the response
+     * @param contentType
+     *            the content type
+     * @param responseCode
+     *            the response code
+     * @param responseClass
+     *            the response type (class)
+     * @param <T>
+     *            must be of type OAuthClientResponse
      * @return a http client that will give the supplied response to all execute calls
      */
-    private <T extends OAuthClientResponse> SpidHttp4ClientFactory getMockedConnectionClientFactoryWithFixedResponse(String responseBody, String contentType, Integer responseCode, Class<T> responseClass) {
+    private <T extends OAuthClientResponse> SpidConnectionClientFactory getMockedConnectionClientFactoryWithFixedResponse(String responseBody, String contentType,
+            Integer responseCode, Class<T> responseClass) throws Exception {
         HttpClient httpClient;
 
-        try {
-            httpClient = mock(HttpClient.class);
-            T response = OAuthClientResponseFactory.createCustomResponse(responseBody, contentType, responseCode, responseClass);
-            when(httpClient.execute(any(OAuthClientRequest.class), anyMapOf(String.class, String.class), anyString(), any(Class.class))).thenReturn(response);
-        } catch (Exception e) {
-            return null;
-        }
+        httpClient = mock(HttpClient.class);
+        T response = OAuthClientResponseFactory.createCustomResponse(responseBody, contentType, responseCode, responseClass);
+        when(httpClient.execute(any(OAuthClientRequest.class), anyMapOf(String.class, String.class), anyString(), any(Class.class))).thenReturn(response);
 
         // Build spid client with mocked http client
-        SpidHttp4ClientFactory connectionClientFactory = mock(SpidHttp4ClientFactory.class);
+        SpidConnectionClientFactory connectionClientFactory = mock(SpidConnectionClientFactory.class);
         when(connectionClientFactory.getClient()).thenReturn(httpClient);
 
         return connectionClientFactory;
     }
 
     /**
-     * Creates a mock http client that gives a fixed response and in addition always responds successfully to a token
-     * request.
+     * Creates a mock http client that gives a fixed response and in addition always responds successfully to a token request.
      *
-     * @param responseBody the response
-     * @param contentType  the content type
-     * @param responseCode the response code
-     * @param responseClass the response type (class)
-     * @param <T> must be of type OAuthClientResponse
+     * @param responseBody
+     *            the response
+     * @param contentType
+     *            the content type
+     * @param responseCode
+     *            the response code
+     * @param responseClass
+     *            the response type (class)
+     * @param <T>
+     *            must be of type OAuthClientResponse
      * @return a http client that will give the supplied response to all execute calls
      */
-    private <T extends OAuthClientResponse> SpidHttp4ClientFactory getMockedConnectionClientFactoryWithFixedResponseAndToken(String responseBody, String contentType, Integer responseCode, Class<T> responseClass) {
+    private <T extends OAuthClientResponse> SpidConnectionClientFactory getMockedConnectionClientFactoryWithFixedResponseAndToken(String responseBody, String contentType,
+            Integer responseCode, Class<T> responseClass) throws Exception {
         HttpClient httpClient;
 
-        try {
-            httpClient = mock(HttpClient.class);
-            OAuthJSONAccessTokenResponse responseToken = OAuthClientResponseFactory.createCustomResponse(SUCCESSFUL_TOKEN_RESPONSE, "application/json", 200, OAuthJSONAccessTokenResponse.class);
-            T response = OAuthClientResponseFactory.createCustomResponse(responseBody, contentType, responseCode, responseClass);
-            // NB Order matters on matching
-            when(httpClient.execute(any(OAuthClientRequest.class), anyMapOf(String.class, String.class), anyString(), any(Class.class))).thenReturn(response);
-            when(httpClient.execute(any(OAuthClientRequest.class), anyMapOf(String.class, String.class), anyString(), eq(OAuthJSONAccessTokenResponse.class))).thenReturn(responseToken);
-        } catch (Exception e) {
-            return null;
-        }
+        httpClient = mock(HttpClient.class);
+        OAuthJSONAccessTokenResponse responseToken = OAuthClientResponseFactory.createCustomResponse(SUCCESSFUL_TOKEN_RESPONSE, "application/json", 200,
+                OAuthJSONAccessTokenResponse.class);
+        T response = OAuthClientResponseFactory.createCustomResponse(responseBody, contentType, responseCode, responseClass);
+        // NB Order matters on matching
+        when(httpClient.execute(any(OAuthClientRequest.class), anyMapOf(String.class, String.class), anyString(), any(Class.class))).thenReturn(response);
+        when(httpClient.execute(any(OAuthClientRequest.class), anyMapOf(String.class, String.class), anyString(), eq(OAuthJSONAccessTokenResponse.class)))
+                .thenReturn(responseToken);
 
         // Build spid client with mocked http client
-        SpidHttp4ClientFactory connectionClientFactory = mock(SpidHttp4ClientFactory.class);
+        SpidConnectionClientFactory connectionClientFactory = mock(SpidConnectionClientFactory.class);
         when(connectionClientFactory.getClient()).thenReturn(httpClient);
 
         return connectionClientFactory;
     }
 
     /**
-     * Creates a mock http client that gives a fixed response and in addition responds successfully to a new token request while failing refresh token request
-     * request.
+     * Creates a mock http client that gives a fixed response and in addition responds successfully to a new token request while failing refresh token request request.
      *
-     * @param responseBody the response
-     * @param contentType  the content type
-     * @param responseCode the response code
-     * @param responseClass the response type (class)
-     * @param <T> must be of type OAuthClientResponse
+     * @param responseBody
+     *            the response
+     * @param contentType
+     *            the content type
+     * @param responseCode
+     *            the response code
+     * @param responseClass
+     *            the response type (class)
+     * @param <T>
+     *            must be of type OAuthClientResponse
      * @return a http client that will give the supplied response to all execute calls
+     * @throws Exception
+     * @throws OAuthSystemException
      */
-    private <T extends OAuthClientResponse> SpidHttp4ClientFactory getMockedConnectionClientFactoryForAutoRenew(String responseBody, String contentType, Integer responseCode, Class<T> responseClass) {
+    private <T extends OAuthClientResponse> SpidConnectionClientFactory getMockedConnectionClientFactoryForAutoRenew(String responseBody, String contentType, Integer responseCode,
+            Class<T> responseClass) throws Exception {
         HttpClient httpClient;
 
-        try {
-            httpClient = mock(HttpClient.class);
-            OAuthJSONAccessTokenResponse responseToken = OAuthClientResponseFactory.createCustomResponse(SUCCESSFUL_RENEWED_TOKEN_RESPONSE, "application/json", 200, OAuthJSONAccessTokenResponse.class);
-            T response = OAuthClientResponseFactory.createCustomResponse(responseBody, contentType, responseCode, responseClass);
-            // NB Order matters on matching
-            when(httpClient.execute(any(OAuthClientRequest.class), anyMapOf(String.class, String.class), anyString(), any(Class.class))).thenReturn(response);
-            when(httpClient.execute(argThat(new OauthGrantTypeMatcher(GrantType.REFRESH_TOKEN)), anyMapOf(String.class, String.class), anyString(), eq(OAuthJSONAccessTokenResponse.class))).thenThrow(OAuthProblemException.error("Unable to refresh"));
-            when(httpClient.execute(argThat(new OauthGrantTypeMatcher(GrantType.CLIENT_CREDENTIALS)), anyMapOf(String.class, String.class), anyString(), eq(OAuthJSONAccessTokenResponse.class))).thenReturn(responseToken);
-        } catch (Exception e) {
-            return null;
-        }
+        httpClient = mock(HttpClient.class);
+        OAuthJSONAccessTokenResponse responseToken = OAuthClientResponseFactory.createCustomResponse(SUCCESSFUL_RENEWED_TOKEN_RESPONSE, "application/json", 200,
+                OAuthJSONAccessTokenResponse.class);
+        T response = OAuthClientResponseFactory.createCustomResponse(responseBody, contentType, responseCode, responseClass);
+        // NB Order matters on matching
+        when(httpClient.execute(any(OAuthClientRequest.class), anyMapOf(String.class, String.class), anyString(), any(Class.class))).thenReturn(response);
+        when(httpClient.execute(argThat(new OauthGrantTypeMatcher(GrantType.REFRESH_TOKEN)), anyMapOf(String.class, String.class), anyString(),
+                eq(OAuthJSONAccessTokenResponse.class))).thenThrow(OAuthProblemException.error("Unable to refresh"));
+        when(httpClient.execute(argThat(new OauthGrantTypeMatcher(GrantType.CLIENT_CREDENTIALS)), anyMapOf(String.class, String.class), anyString(),
+                eq(OAuthJSONAccessTokenResponse.class))).thenReturn(responseToken);
 
         // Build spid client with mocked http client
-        SpidHttp4ClientFactory connectionClientFactory = mock(SpidHttp4ClientFactory.class);
+        SpidConnectionClientFactory connectionClientFactory = mock(SpidConnectionClientFactory.class);
         when(connectionClientFactory.getClient()).thenReturn(httpClient);
 
         return connectionClientFactory;
@@ -308,9 +333,12 @@ public class SpidApiClientTest {
     /**
      * Utility method to compare two urls. Ignoring order on parameters.
      *
-     * @param urlExpected expected url
-     * @param urlActual actual url
-     * @throws Exception any error
+     * @param urlExpected
+     *            expected url
+     * @param urlActual
+     *            actual url
+     * @throws Exception
+     *             any error
      */
     private void assertEqualURLs(String urlExpected, String urlActual) throws Exception {
         URL uExpected = new URL(urlExpected);
