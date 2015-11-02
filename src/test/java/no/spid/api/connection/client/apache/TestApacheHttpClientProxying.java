@@ -86,13 +86,14 @@ public class TestApacheHttpClientProxying {
         OAuthClientRequest request = new SpidOAuthBearerClientRequest("http://127.0.0.1:" + mockSpidRule.port() + "/test")
                 .setAccessToken("token")
                 .buildQueryMessage();
-        // when
         Long start = System.currentTimeMillis();
+        // when
         try {
             client.execute(request, new HashMap<String, String>(), "GET", OAuthResourceResponse.class);
             // then
         } catch (OAuthSystemException e) {
             assertTrue(System.currentTimeMillis() - start < 1500);
+            assertTrue(System.currentTimeMillis() - start > 900);
             proxyRule.verify(1, getRequestedFor(urlEqualTo("/test?oauth_token=token")));
             mockSpidRule.verify(0, getRequestedFor(urlEqualTo("/test?oauth_token=token")));
             assertTrue(e.getCause() instanceof SocketTimeoutException);
@@ -110,11 +111,13 @@ public class TestApacheHttpClientProxying {
         OAuthClientRequest request = new SpidOAuthBearerClientRequest("http://127.0.0.1:" + mockSpidRule.port() + "/test")
                 .setAccessToken("token")
                 .buildQueryMessage();
+        Long start = System.currentTimeMillis();
         // when
         try {
             client.execute(request, new HashMap<String, String>(), "GET", OAuthResourceResponse.class);
             // then
         } catch (OAuthSystemException e) {
+            assertTrue(System.currentTimeMillis() - start > 900);
             mockSpidRule.verify(0, getRequestedFor(urlEqualTo("/test?oauth_token=token")));
             assertTrue(e.getCause() instanceof ConnectTimeoutException);
             throw e;

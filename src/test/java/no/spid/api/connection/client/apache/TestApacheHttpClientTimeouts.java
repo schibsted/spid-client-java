@@ -74,11 +74,13 @@ public class TestApacheHttpClientTimeouts {
         OAuthClientRequest request = new SpidOAuthBearerClientRequest("http://127.0.0.1:" + mockSpidRule.port() + "/test")
                 .setAccessToken("token")
                 .buildQueryMessage();
+        Long start = System.currentTimeMillis();
         // when
         try {
             client.execute(request, new HashMap<String, String>(), "GET", OAuthResourceResponse.class);
             // then
         } catch (OAuthSystemException e) {
+            assertTrue(System.currentTimeMillis() - start > 900);
             mockSpidRule.verify(1, getRequestedFor(urlEqualTo("/test?oauth_token=token")));
             assertTrue(e.getCause() instanceof SocketTimeoutException);
             throw e;
@@ -97,11 +99,13 @@ public class TestApacheHttpClientTimeouts {
         OAuthClientRequest request = new SpidOAuthBearerClientRequest("http://127.0.0.1:" + port + "/test")
                 .setAccessToken("token")
                 .buildQueryMessage();
+        Long start = System.currentTimeMillis();
         // when
         try {
             client.execute(request, new HashMap<String, String>(), "GET", OAuthResourceResponse.class);
             // then
         } catch (OAuthSystemException e) {
+            assertTrue(System.currentTimeMillis() - start > 900);
             assertTrue(e.getCause() instanceof ConnectTimeoutException);
             throw e;
         }
