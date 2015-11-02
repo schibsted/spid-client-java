@@ -12,6 +12,7 @@ import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 
 import no.spid.api.connection.SpidConnectionClientFactory;
+import no.spid.api.connection.SpidUrlConnectionClientFactory;
 import no.spid.api.exceptions.SpidApiException;
 import no.spid.api.exceptions.SpidOAuthException;
 import no.spid.api.oauth.SpidOAuthBearerClientRequest;
@@ -20,8 +21,8 @@ import no.spid.api.oauth.SpidOAuthTokenType;
 import no.spid.api.security.SpidSecurityHelper;
 
 /**
- * The SpidApiClient can be used to login users and get their user tokens, get server tokens. When a token is acquired the client can be
- * used to consume the services of the SPiD API.
+ * The SpidApiClient can be used to login users and get their user tokens, get server tokens. When a token is acquired the client can be used to consume the services of the SPiD
+ * API.
  *
  * http://techdocs.spid.no
  */
@@ -140,10 +141,7 @@ public class SpidApiClient {
 
             return spidResponse;
 
-        } else if (response.getResponseCode() == 404) {
-            throw new SpidOAuthException("404: Not found");
         } else {
-
             throw new SpidApiException(response.getResponseCode() + ":" + response.getBody(), spidResponse);
         }
     }
@@ -362,8 +360,7 @@ public class SpidApiClient {
     }
 
     /**
-     * Wrapper for validating/refreshing/refetching an oauth-token automatically if enabled. When the token is validated its access token
-     * part is returned.
+     * Wrapper for validating/refreshing/refetching an oauth-token automatically if enabled. When the token is validated its access token part is returned.
      *
      * @param token
      *            the token to validate
@@ -451,6 +448,7 @@ public class SpidApiClient {
             this.spidBaseUrl = spidBaseUrl;
 
             securityHelper = new SpidSecurityHelper(this.clientSignatureSecret);
+            connectionClientFactory = new SpidUrlConnectionClientFactory();
 
         }
 
