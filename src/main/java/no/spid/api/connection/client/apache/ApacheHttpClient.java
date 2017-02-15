@@ -46,7 +46,7 @@ public class ApacheHttpClient implements org.apache.oltu.oauth2.client.HttpClien
     private <T extends OAuthClientResponse> T internalExecute(HttpUriRequest rq, Class<T> responseClass) throws OAuthSystemException, OAuthProblemException {
         CloseableHttpResponse response = null;
         try {
-            LOGGER.debug("Calling SPID with request {}...", rq);
+            LOGGER.debug("Calling SPID with request...");
             response = httpClient.execute(rq);
             LOGGER.debug("Received response from SPID: {}", response);
             String body = httpResponseProcessor.getBody(response);
