@@ -48,7 +48,7 @@ public class ApacheHttpClient implements org.apache.oltu.oauth2.client.HttpClien
         try {
             LOGGER.debug("Calling SPID with request...");
             response = httpClient.execute(rq);
-            LOGGER.debug("Received response from SPID: {}", response);
+            LOGGER.debug("Received response from SPID...");
             String body = httpResponseProcessor.getBody(response);
             String contentType = httpResponseProcessor.getContentType(response);
             return oAuthClientResponseFactoryWrapper.createCustomResponse(body, contentType, response.getStatusLine().getStatusCode(), responseClass);
