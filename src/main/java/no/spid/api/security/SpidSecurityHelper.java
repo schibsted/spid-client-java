@@ -8,6 +8,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Map;
@@ -53,7 +54,7 @@ public class SpidSecurityHelper {
             e.printStackTrace();
         }
 
-        if (!Arrays.equals(generatedSignature, callbackSignatureBytes))
+        if (!MessageDigest.isEqual(generatedSignature, callbackSignatureBytes))
             throw new SpidApiException("Signature is not valid!");
 
         return new String(base64UrlDecode(callbackPayload));
@@ -99,7 +100,7 @@ public class SpidSecurityHelper {
 
         byte[] signature = base64UrlDecode(b64signature);
 
-        if(!Arrays.equals(digest, signature))
+        if(!MessageDigest.isEqual(digest, signature))
             throw new SpidApiException("Could not verify signature");
 
         byte[] data = base64UrlDecode(b64data);
