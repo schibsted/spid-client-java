@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Optional;
 
 import org.apache.oltu.oauth2.client.HttpClient;
 import org.apache.oltu.oauth2.client.request.OAuthClientRequest;
@@ -37,10 +38,13 @@ import no.spid.api.oauth.SpidOAuthTokenType;
 
 public class SpidApiClientTest {
 
+    private String USER_ID = "12345";
     private String SUCCESSFUL_ACCESS_TOKEN = "44005d748f89a86b6b1ad9d1ef833dc55e0d6244";
     private String SUCCESSFUL_REFRESH_TOKEN = "90bc261093c26bbdd0cab54a891f7e06298b7556";
     private String SUCCESSFUL_TOKEN_RESPONSE = "{\"access_token\":\"" + SUCCESSFUL_ACCESS_TOKEN
             + "\",\"expires_in\":2419200,\"scope\":null,\"user_id\":false,\"is_admin\":false,\"refresh_token\":\"" + SUCCESSFUL_REFRESH_TOKEN + "\",\"server_time\":1398246344}";
+    private String SUCCESSFUL_USER_TOKEN_RESPONSE = "{\"access_token\":\"" + SUCCESSFUL_ACCESS_TOKEN
+            + "\",\"expires_in\":2419200,\"scope\":null,\"user_id\":\"" + USER_ID + "\",\"is_admin\":false,\"refresh_token\":\"" + SUCCESSFUL_REFRESH_TOKEN + "\",\"server_time\":1398246344}";
     private String SUCCESSFUL_RENEWED_ACCESS_TOKEN = "44005d748f89a86b6b1ad9d1ef833dc55e0d6244";
     private String SUCCESSFUL_RENEWED_TOKEN_RESPONSE = "{\"access_token\":\"" + SUCCESSFUL_RENEWED_ACCESS_TOKEN
             + "\",\"expires_in\":2419200,\"scope\":null,\"user_id\":false,\"is_admin\":false,\"refresh_token\":\"" + SUCCESSFUL_REFRESH_TOKEN + "\",\"server_time\":1398246344}";
@@ -200,6 +204,48 @@ public class SpidApiClientTest {
         SpidApiResponse response = spidClient.GET(token, "/me", null);
 
         assertThat(token.getAccessToken(), is(SUCCESSFUL_RENEWED_ACCESS_TOKEN));
+    }
+
+    @Test
+    public void restUserTokenContainsUserID() throws Exception {
+        // Create a mock http client that gives a fixed response
+        SpidConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
+                SUCCESSFUL_USER_TOKEN_RESPONSE,
+                "application/json",
+                200,
+                OAuthJSONAccessTokenResponse.class);
+
+        SpidApiClient spidClient = new SpidApiClient.ClientBuilder("ID", "SECRET", "SIGNSECRET", "https://redirect.uri", "https://spiddomain.no")
+                .connectionClientFactory(connectionClientFactory)
+                .build();
+
+        SpidOAuthToken token = spidClient.getUserToken("code");
+        assertEquals(SpidOAuthTokenType.USER, token.getType());
+        assertEquals(SUCCESSFUL_ACCESS_TOKEN, token.getAccessToken());
+        assertEquals(SUCCESSFUL_REFRESH_TOKEN, token.getRefreshToken());
+        assertEquals(Long.valueOf(2419200), token.getExpiresIn());
+        assertEquals(token.getUserId().get(), USER_ID);
+    }
+
+    @Test
+    public void restUserTokenMissingUserID() throws Exception {
+        // Create a mock http client that gives a fixed response
+        SpidConnectionClientFactory connectionClientFactory = getMockedConnectionClientFactoryWithFixedResponse(
+                SUCCESSFUL_TOKEN_RESPONSE,
+                "application/json",
+                200,
+                OAuthJSONAccessTokenResponse.class);
+
+        SpidApiClient spidClient = new SpidApiClient.ClientBuilder("ID", "SECRET", "SIGNSECRET", "https://redirect.uri", "https://spiddomain.no")
+                .connectionClientFactory(connectionClientFactory)
+                .build();
+
+        SpidOAuthToken token = spidClient.getUserToken("code");
+        assertEquals(SpidOAuthTokenType.USER, token.getType());
+        assertEquals(SUCCESSFUL_ACCESS_TOKEN, token.getAccessToken());
+        assertEquals(SUCCESSFUL_REFRESH_TOKEN, token.getRefreshToken());
+        assertEquals(Long.valueOf(2419200), token.getExpiresIn());
+        assertEquals(token.getUserId(), Optional.empty());
     }
 
     /** END OF TESTS **/
