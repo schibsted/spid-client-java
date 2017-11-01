@@ -426,7 +426,7 @@ public class SpidApiClient {
     private Optional<String> getUserId(OAuthJSONAccessTokenResponse response) {
         JSONObject jsonBody = new JSONObject(response.getBody());
         String optString = jsonBody.optString("user_id");
-        return optString.equals("false") ? Optional.<String>empty() : Optional.of(jsonBody.getString("user_id"));
+        return optString.equals("false") || optString.equals("") ? Optional.<String>empty() : Optional.of(jsonBody.getString("user_id"));
     }
 
     /**
