@@ -1,6 +1,7 @@
 package no.spid.api.client;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.oltu.oauth2.client.OAuthClient;
 import org.apache.oltu.oauth2.client.request.OAuthClientRequest;
@@ -19,6 +20,7 @@ import no.spid.api.oauth.SpidOAuthBearerClientRequest;
 import no.spid.api.oauth.SpidOAuthToken;
 import no.spid.api.oauth.SpidOAuthTokenType;
 import no.spid.api.security.SpidSecurityHelper;
+import org.json.JSONObject;
 
 /**
  * The SpidApiClient can be used to login users and get their user tokens, get server tokens. When a token is acquired the client can be used to consume the services of the SPiD
@@ -298,8 +300,6 @@ public class SpidApiClient {
      *             If an OAuth related error occurs
      */
     public SpidOAuthToken getUserToken(String code) throws SpidOAuthException {
-        OAuthJSONAccessTokenResponse oAuthResponse;
-
         try {
             OAuthClientRequest request = OAuthClientRequest
                     .tokenLocation(spidTokenUrl)
@@ -311,15 +311,15 @@ public class SpidApiClient {
                     .buildBodyMessage();
 
             OAuthClient oAuthClient = new OAuthClient(connectionClientFactory.getClient());
-            oAuthResponse = oAuthClient.accessToken(request);
+            OAuthJSONAccessTokenResponse oAuthResponse = oAuthClient.accessToken(request);
+            Optional<String> userId = getUserId(oAuthResponse);
 
+            return new SpidOAuthToken(oAuthResponse.getOAuthToken(), SpidOAuthTokenType.USER, userId);
         } catch (OAuthSystemException e) {
             throw new SpidOAuthException(e);
         } catch (OAuthProblemException e) {
             throw new SpidOAuthException(e);
         }
-
-        return new SpidOAuthToken(oAuthResponse.getOAuthToken(), SpidOAuthTokenType.USER);
     }
 
     /**
@@ -334,7 +334,7 @@ public class SpidApiClient {
      *             If an OAuth related error occurs
      */
     public SpidOAuthToken getUserToken(String username, String password) throws SpidOAuthException {
-        OAuthJSONAccessTokenResponse oAuthResponse;
+
 
         try {
             OAuthClientRequest request = OAuthClientRequest
@@ -348,15 +348,15 @@ public class SpidApiClient {
                     .buildBodyMessage();
 
             OAuthClient oAuthClient = new OAuthClient(connectionClientFactory.getClient());
-            oAuthResponse = oAuthClient.accessToken(request);
+            OAuthJSONAccessTokenResponse oAuthResponse = oAuthClient.accessToken(request);
+            Optional<String> userId = getUserId(oAuthResponse);
 
+            return new SpidOAuthToken(oAuthResponse.getOAuthToken(), SpidOAuthTokenType.USER, userId);
         } catch (OAuthSystemException e) {
             throw new SpidOAuthException(e);
         } catch (OAuthProblemException e) {
             throw new SpidOAuthException(e);
         }
-
-        return new SpidOAuthToken(oAuthResponse.getOAuthToken(), SpidOAuthTokenType.USER);
     }
 
     /**
@@ -421,6 +421,12 @@ public class SpidApiClient {
         token.refresh(newToken);
 
         return true;
+    }
+
+    private Optional<String> getUserId(OAuthJSONAccessTokenResponse response) {
+        JSONObject jsonBody = new JSONObject(response.getBody());
+        String optString = jsonBody.optString("user_id");
+        return optString.equals("false") || optString.equals("") ? Optional.<String>empty() : Optional.of(jsonBody.getString("user_id"));
     }
 
     /**
