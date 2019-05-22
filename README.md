@@ -2,7 +2,10 @@
 
 A Java client for the SPiD API.
 
-## Usage
+## Deprecated
+**This SDK is no longer receiving any support or fixes.**
+
+### Usage
 
 To use the spid-client-java in your projects include it in your pom.xml.
 
@@ -14,7 +17,7 @@ To use the spid-client-java in your projects include it in your pom.xml.
 </dependency>
 ```
 
-## Examples
+### Examples
 
 For examples go to:
 https://github.com/schibsted/spid-java-examples
